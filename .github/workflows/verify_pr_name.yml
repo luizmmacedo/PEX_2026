@@ -1,0 +1,25 @@
+name: PR Title Lint
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validar título do PR
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          echo "Título do PR: $TITLE"
+
+          PATTERN='^(✨|🐛|📝|🚀|🔧|🧪|♻️|💄|📦|✅)?\s*(FEAT|FIX|DOCS|CHORE|REFACTOR|PERF|STYLE|TEST|BUILD|CI)(\([a-z0-9_-]+\))?:\s+.+$'
+
+          if [[ ! "$TITLE" =~ $PATTERN ]]; then
+            echo "::error::Título de PR inválido."
+            echo "::error::Use o padrão commit-style com emoji, por exemplo:"
+            echo "::error::  ✨ FEAT: adicionar tela de login"
+            echo "::error::  🐛 FIX: corrigir crash no Android"
+            exit 1
+          fi

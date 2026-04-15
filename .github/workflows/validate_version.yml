@@ -1,0 +1,38 @@
+name: Validate Version Tag
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
+      - name: Get version from file
+        id: get_version
+        run: |
+          VERSION=$(yq '.version' release.yaml)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Fetch tags
+        run: git fetch --tags
+
+      - name: Check if tag exists
+        run: |
+          if git rev-parse "${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "❌ TAG já existe no remoto!"
+            exit 1
+          else
+            echo "✅ TAG ainda não existe no remoto!"
+          fi
