@@ -1,4 +1,4 @@
-# Projeto Extensionista (PEX) - Tia Lara Safe 🚌
+# Projeto Extensionista (PEX) - Tia Lara 🚌
 
 ## Sobre o Projeto
 Este projeto é um **Projeto Extensionista (PEX)** desenvolvido para a **Católica de Santa Catarina** com o objetivo de criar uma aplicação mobile para a **Transportadora Tia Lara**.
