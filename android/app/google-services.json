@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "996238923613",
+    "project_id": "pex-2026",
+    "storage_bucket": "pex-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996238923613:android:fa52cc7424f5d2b369fab4",
+        "android_client_info": {
+          "package_name": "com.pex_2026.pex_2026"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARwJv4uCDH2Htlor8YgwxJ0xsUZHAIA84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
