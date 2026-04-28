@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_page.dart';
 import 'dashboard_page.dart';
 import 'add_aluno_page.dart';
+import 'escolas_page.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -36,8 +37,8 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF003366),
             foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -47,8 +48,16 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardPage(),
         '/addAluno': (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
-          if (args != null && args is Map<String, dynamic>) {
+          if (args is Map<String, dynamic>) {
             return AddAlunoPage(transportador: args);
+          }
+          return const Scaffold(
+              body: Center(child: Text('Transportador não informado')));
+        },
+        '/escolas': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is Map<String, dynamic>) {
+            return EscolasPage(transportador: args);
           }
           return const Scaffold(
               body: Center(child: Text('Transportador não informado')));
@@ -60,7 +69,6 @@ class MyApp extends StatelessWidget {
 
 class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
-
   @override
   State<AuthCheck> createState() => _AuthCheckState();
 }
@@ -95,10 +103,9 @@ class _AuthCheckState extends State<AuthCheck> {
         await prefs.remove('transportador_uid');
         Navigator.of(context).pushReplacementNamed('/login');
       } else {
-        final transportador = query.docs.first.data();
         Navigator.of(context).pushReplacementNamed(
           '/dashboard',
-          arguments: transportador,
+          arguments: query.docs.first.data(),
         );
       }
     } catch (_) {
@@ -117,15 +124,12 @@ class _AuthCheckState extends State<AuthCheck> {
           children: [
             Icon(Icons.directions_bus, size: 64, color: Colors.white),
             SizedBox(height: 16),
-            Text(
-              'SafeRide',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-            ),
+            Text('SafeRide',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2)),
             SizedBox(height: 32),
             CircularProgressIndicator(color: Colors.white),
           ],
