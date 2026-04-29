@@ -25,6 +25,7 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
   String? _error;
 
   static const primary = Color(0xFF003366);
+  static const accent = Color(0xFF0057B8);
   final DatabaseService _service = DatabaseService();
 
   String get _uid => widget.transportador['uid'] ?? '';
@@ -43,29 +44,31 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
   Future<String?> _validarOrdem(int ordemIda, int ordemVolta) async {
     final periodo = _periodoSelecionado;
 
-    final snapIda = await FirebaseFirestore.instance
-        .collection('alunos')
-        .where('id_transportador', isEqualTo: _uid)
-        .where('periodo', isEqualTo: periodo)
-        .where('ordem_ida', isEqualTo: ordemIda)
-        .get();
-
-    if (snapIda.docs.isNotEmpty) {
-      final nome = snapIda.docs.first.data()['nome_aluno'] ?? 'outro aluno';
-      return 'Ordem de ida $ordemIda já usada por "$nome" no período $periodo.';
+    if (ordemIda > 0) {
+      final snapIda = await FirebaseFirestore.instance
+          .collection('alunos')
+          .where('id_transportador', isEqualTo: _uid)
+          .where('periodo', isEqualTo: periodo)
+          .where('ordem_ida', isEqualTo: ordemIda)
+          .get();
+      if (snapIda.docs.isNotEmpty) {
+        final nome = snapIda.docs.first.data()['nome_aluno'] ?? 'outro aluno';
+        return 'Ordem de ida $ordemIda já usada por "$nome" no período $periodo.';
+      }
     }
 
-    final snapVolta = await FirebaseFirestore.instance
-        .collection('alunos')
-        .where('id_transportador', isEqualTo: _uid)
-        .where('periodo', isEqualTo: periodo)
-        .where('ordem_volta', isEqualTo: ordemVolta)
-        .get();
-
-    if (snapVolta.docs.isNotEmpty) {
-      final nome =
-          snapVolta.docs.first.data()['nome_aluno'] ?? 'outro aluno';
-      return 'Ordem de volta $ordemVolta já usada por "$nome" no período $periodo.';
+    if (ordemVolta > 0) {
+      final snapVolta = await FirebaseFirestore.instance
+          .collection('alunos')
+          .where('id_transportador', isEqualTo: _uid)
+          .where('periodo', isEqualTo: periodo)
+          .where('ordem_volta', isEqualTo: ordemVolta)
+          .get();
+      if (snapVolta.docs.isNotEmpty) {
+        final nome =
+            snapVolta.docs.first.data()['nome_aluno'] ?? 'outro aluno';
+        return 'Ordem de volta $ordemVolta já usada por "$nome" no período $periodo.';
+      }
     }
 
     return null;
@@ -81,7 +84,10 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
     final ordemIda = int.tryParse(_ordemIdaController.text) ?? 0;
     final ordemVolta = int.tryParse(_ordemVoltaController.text) ?? 0;
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final queryNome = await FirebaseFirestore.instance
@@ -101,7 +107,10 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
 
       final erroOrdem = await _validarOrdem(ordemIda, ordemVolta);
       if (erroOrdem != null) {
-        setState(() { _error = erroOrdem; _loading = false; });
+        setState(() {
+          _error = erroOrdem;
+          _loading = false;
+        });
         return;
       }
 
@@ -133,253 +142,256 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('Adicionar Aluno'),
-      ),
-      body: SafeArea(
-        child: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: _service.streamEscolas(_uid),
-          builder: (context, snapEscolas) {
-            final escolas = snapEscolas.data ?? [];
-            final semEscolas = escolas.isEmpty &&
-                snapEscolas.connectionState != ConnectionState.waiting;
+      backgroundColor: const Color(0xFFF4F7FB),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _service.streamEscolas(_uid),
+        builder: (context, snapEscolas) {
+          final escolas = snapEscolas.data ?? [];
+          final semEscolas = escolas.isEmpty &&
+              snapEscolas.connectionState != ConnectionState.waiting;
 
-            return Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  if (semEscolas)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.shade200),
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                expandedHeight: 100,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF001F4D), Color(0xFF003F8A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      child: Row(children: [
-                        Icon(Icons.warning_amber_rounded,
-                            color: Colors.orange.shade700),
-                        const SizedBox(width: 10),
+                    ),
+                  ),
+                  title: const Text(
+                    'Adicionar Aluno',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                ),
+              ),
+
+              SliverToBoxAdapter(
+                child: Form(
+                  key: _formKey,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(children: [
+                      if (semEscolas)
+                        _InfoBanner(
+                          icon: Icons.warning_amber_rounded,
+                          message:
+                              'Cadastre as escolas primeiro no menu Escolas.',
+                          color: Colors.orange,
+                        ),
+
+                      _Secao(titulo: 'Dados do Aluno', icon: Icons.child_care_rounded),
+
+                      _Cartao(children: [
+                        _campo(_nomeController, 'Nome do aluno',
+                            Icons.badge_outlined,
+                            required: true),
+
+                        _DropdownField<String>(
+                          value: _escolaSelecionada,
+                          label: 'Escola',
+                          icon: Icons.school_rounded,
+                          hint: snapEscolas.connectionState ==
+                                  ConnectionState.waiting
+                              ? 'Carregando...'
+                              : semEscolas
+                                  ? 'Nenhuma escola cadastrada'
+                                  : 'Selecione a escola',
+                          items: escolas
+                              .map((e) => DropdownMenuItem<String>(
+                                    value: e['nome'] as String,
+                                    child: Text(e['nome'] as String),
+                                  ))
+                              .toList(),
+                          onChanged: semEscolas
+                              ? null
+                              : (val) =>
+                                  setState(() => _escolaSelecionada = val),
+                          validator: (_) => _escolaSelecionada == null
+                              ? 'Selecione uma escola'
+                              : null,
+                        ),
+
+                        _campo(_enderecoController, 'Local de parada',
+                            Icons.location_on_outlined),
+
+                        _DropdownField<String>(
+                          value: _periodoSelecionado,
+                          label: 'Período',
+                          icon: Icons.schedule_rounded,
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'Matutino', child: Text('Matutino')),
+                            DropdownMenuItem(
+                                value: 'Vespertino',
+                                child: Text('Vespertino')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null)
+                              setState(() => _periodoSelecionado = val);
+                          },
+                          isLast: true,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 20),
+
+                      _Secao(titulo: 'Responsável', icon: Icons.person_rounded),
+
+                      _Cartao(children: [
+                        _campo(_responsavelController, 'Nome do responsável',
+                            Icons.person_outline,
+                            required: true),
+                        _campo(_whatsappController, 'WhatsApp (com DDD)',
+                            Icons.phone_outlined,
+                            keyboardType: TextInputType.phone,
+                            required: true,
+                            isLast: true),
+                      ]),
+
+                      const SizedBox(height: 20),
+
+                      _Secao(
+                          titulo: 'Ordem de Rota',
+                          icon: Icons.route_rounded),
+
+                      _InfoBanner(
+                        icon: Icons.info_outline_rounded,
+                        message:
+                            'A ordem deve ser única por turno ($_periodoSelecionado). Use 0 se o aluno não faz um dos trajetos.',
+                        color: Colors.blue,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Row(children: [
                         Expanded(
-                          child: Text(
-                            'Cadastre as escolas primeiro no menu Escolas.',
-                            style:
-                                TextStyle(color: Colors.orange.shade800),
+                          child: _OrdemCard(
+                            controller: _ordemIdaController,
+                            label: 'Ordem Ida',
+                            icon: Icons.arrow_upward_rounded,
+                            color: const Color(0xFF1565C0),
+                            bgColor: const Color(0xFFE8F0FE),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _OrdemCard(
+                            controller: _ordemVoltaController,
+                            label: 'Ordem Volta',
+                            icon: Icons.arrow_downward_rounded,
+                            color: const Color(0xFF6A1B9A),
+                            bgColor: const Color(0xFFF3E5F5),
                           ),
                         ),
                       ]),
-                    ),
 
-                  _secao('Dados do Aluno'),
-                  _campo(_nomeController, 'Nome do aluno', Icons.child_care,
-                      required: true),
+                      const SizedBox(height: 20),
 
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: DropdownButtonFormField<String>(
-                      value: _escolaSelecionada,
-                      decoration: InputDecoration(
-                        labelText: 'Escola',
-                        prefixIcon:
-                            const Icon(Icons.school, color: primary),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: primary, width: 2),
+                      if (_error != null)
+                        _InfoBanner(
+                          icon: Icons.error_outline_rounded,
+                          message: _error!,
+                          color: Colors.red,
+                        ),
+
+                      const SizedBox(height: 8),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                          ),
+                          onPressed: _loading ? null : _salvarAluno,
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2.5))
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.check_circle_outline_rounded,
+                                        size: 20),
+                                    SizedBox(width: 10),
+                                    Text('Salvar Aluno',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
                         ),
                       ),
-                      hint: snapEscolas.connectionState ==
-                              ConnectionState.waiting
-                          ? const Text('Carregando...')
-                          : semEscolas
-                              ? const Text('Nenhuma escola cadastrada')
-                              : const Text('Selecione a escola'),
-                      items: escolas
-                          .map((e) => DropdownMenuItem<String>(
-                                value: e['nome'] as String,
-                                child: Text(e['nome'] as String),
-                              ))
-                          .toList(),
-                      onChanged: semEscolas
-                          ? null
-                          : (val) =>
-                              setState(() => _escolaSelecionada = val),
-                      validator: (_) => _escolaSelecionada == null
-                          ? 'Selecione uma escola'
-                          : null,
-                    ),
-                  ),
 
-                  _campo(_enderecoController, 'Local de parada',
-                      Icons.location_on),
-
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: DropdownButtonFormField<String>(
-                      value: _periodoSelecionado,
-                      decoration: InputDecoration(
-                        labelText: 'Período',
-                        prefixIcon:
-                            const Icon(Icons.schedule, color: primary),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: primary, width: 2),
-                        ),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'Matutino', child: Text('Matutino')),
-                        DropdownMenuItem(
-                            value: 'Vespertino',
-                            child: Text('Vespertino')),
-                      ],
-                      onChanged: (val) {
-                        if (val != null)
-                          setState(() => _periodoSelecionado = val);
-                      },
-                    ),
-                  ),
-
-                  _secao('Responsável'),
-                  _campo(_responsavelController, 'Nome do responsável',
-                      Icons.person,
-                      required: true),
-                  _campo(_whatsappController,
-                      'WhatsApp do responsável', Icons.phone,
-                      keyboardType: TextInputType.phone, required: true),
-
-                  _secao('Ordem de Rota'),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.blue.shade100),
-                    ),
-                    child: Row(children: [
-                      Icon(Icons.info_outline,
-                          color: Colors.blue.shade700, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'A ordem deve ser única por turno ($_periodoSelecionado).',
-                          style: TextStyle(
-                              color: Colors.blue.shade700, fontSize: 12),
-                        ),
-                      ),
+                      const SizedBox(height: 32),
                     ]),
                   ),
-                  Row(children: [
-                    Expanded(
-                      child: _campo(_ordemIdaController, 'Ordem Ida',
-                          Icons.arrow_upward,
-                          keyboardType: TextInputType.number,
-                          required: true),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _campo(_ordemVoltaController, 'Ordem Volta',
-                          Icons.arrow_downward,
-                          keyboardType: TextInputType.number,
-                          required: true),
-                    ),
-                  ]),
-
-                  if (_error != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.shade200),
-                      ),
-                      child: Row(children: [
-                        Icon(Icons.error_outline,
-                            color: Colors.red.shade700, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(_error!,
-                              style:
-                                  TextStyle(color: Colors.red.shade700)),
-                        ),
-                      ]),
-                    ),
-
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: _loading ? null : _salvarAluno,
-                      child: _loading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2))
-                          : const Text('Salvar Aluno',
-                              style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
-            );
-          },
-        ),
+            ],
+          );
+        },
       ),
     );
   }
-
-  Widget _secao(String titulo) => Padding(
-        padding: const EdgeInsets.only(bottom: 12, top: 4),
-        child: Text(titulo,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: primary,
-                letterSpacing: 0.5)),
-      );
 
   Widget _campo(
     TextEditingController controller,
     String label,
     IconData icon, {
     bool required = false,
+    bool isLast = false,
     TextInputType keyboardType = TextInputType.text,
   }) =>
       Padding(
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
         child: TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           decoration: InputDecoration(
             labelText: label,
-            prefixIcon: Icon(icon, color: primary),
+            labelStyle:
+                const TextStyle(color: Colors.black45, fontSize: 14),
+            prefixIcon: Icon(icon, color: primary, size: 20),
+            filled: true,
+            fillColor: Colors.white,
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: Colors.red.shade300, width: 1.5),
             ),
           ),
           validator: required
@@ -389,4 +401,228 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
               : null,
         ),
       );
+}
+
+class _Secao extends StatelessWidget {
+  final String titulo;
+  final IconData icon;
+
+  const _Secao({required this.titulo, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        Container(
+          width: 28, height: 28,
+          decoration: BoxDecoration(
+            color: const Color(0xFF003366).withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: const Color(0xFF003366), size: 15),
+        ),
+        const SizedBox(width: 10),
+        Text(titulo,
+            style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF003366),
+                letterSpacing: 0.3)),
+      ]),
+    );
+  }
+}
+
+class _Cartao extends StatelessWidget {
+  final List<Widget> children;
+
+  const _Cartao({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _DropdownField<T> extends StatelessWidget {
+  final T? value;
+  final String label;
+  final IconData icon;
+  final String? hint;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final FormFieldValidator<T>? validator;
+  final bool isLast;
+
+  const _DropdownField({
+    required this.value,
+    required this.label,
+    required this.icon,
+    this.hint,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle:
+              const TextStyle(color: Colors.black45, fontSize: 14),
+          prefixIcon:
+              Icon(icon, color: const Color(0xFF003366), size: 20),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: Color(0xFF003366), width: 2),
+          ),
+        ),
+        hint: hint != null ? Text(hint!) : null,
+        items: items,
+        onChanged: onChanged,
+        validator: validator,
+      ),
+    );
+  }
+}
+
+class _OrdemCard extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  const _OrdemCard({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(height: 10),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: color.withOpacity(0.3)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: color.withOpacity(0.3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: color, width: 2),
+            ),
+          ),
+          validator: (v) => v == null || v.trim().isEmpty
+              ? 'Obrigatório'
+              : null,
+        ),
+      ]),
+    );
+  }
+}
+
+class _InfoBanner extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final MaterialColor color;
+
+  const _InfoBanner({
+    required this.icon,
+    required this.message,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.shade100),
+      ),
+      child: Row(children: [
+        Icon(icon, color: color.shade700, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            message,
+            style: TextStyle(color: color.shade800, fontSize: 13),
+          ),
+        ),
+      ]),
+    );
+  }
 }

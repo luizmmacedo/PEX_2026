@@ -17,6 +17,7 @@ class DatabaseService {
         .map((snapshot) {
       final alunos = snapshot.docs
           .map((doc) => Aluno.fromFirestore(doc.data(), doc.id))
+          .where((a) => isIndoParaEscola ? a.ordemIda > 0 : a.ordemVolta > 0)
           .toList();
       alunos.sort((a, b) => isIndoParaEscola
           ? a.ordemIda.compareTo(b.ordemIda)
@@ -36,50 +37,35 @@ class DatabaseService {
   Future<void> marcarPresenca(
       String alunoId, int statusPresenca, String trajeto) async {
     final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final dateStr =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    final docId = '${alunoId}_${trajeto}_$dateStr';
 
-    final existing = await _db
-        .collection('presenca_diaria')
-        .where('id_crianca', isEqualTo: alunoId)
-        .where('trajeto', isEqualTo: trajeto)
-        .where('data', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('data', isLessThan: Timestamp.fromDate(endOfDay))
-        .limit(1)
-        .get();
-
-    if (existing.docs.isNotEmpty) {
-      await existing.docs.first.reference.update({
-        'presenca': statusPresenca,
-        'data': FieldValue.serverTimestamp(),
-      });
-    } else {
-      await _db.collection('presenca_diaria').add({
-        'id_crianca': alunoId,
-        'trajeto': trajeto,
-        'data': FieldValue.serverTimestamp(),
-        'presenca': statusPresenca,
-      });
-    }
+    await _db.collection('presenca_diaria').doc(docId).set({
+      'id_crianca': alunoId,
+      'trajeto': trajeto,
+      'data': FieldValue.serverTimestamp(),
+      'presenca': statusPresenca,
+    }, SetOptions(merge: false));
   }
 
   Stream<int?> streamPresencaHoje(String alunoId, String trajeto) {
     final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final dateStr =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    final docId = '${alunoId}_${trajeto}_$dateStr';
 
     return _db
         .collection('presenca_diaria')
-        .where('id_crianca', isEqualTo: alunoId)
-        .where('trajeto', isEqualTo: trajeto)
-        .where('data', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('data', isLessThan: Timestamp.fromDate(endOfDay))
-        .orderBy('data', descending: true)
-        .limit(1)
+        .doc(docId)
         .snapshots()
         .map((snap) {
-      if (snap.docs.isEmpty) return null;
-      return snap.docs.first.data()['presenca'] as int?;
+      if (!snap.exists) return null;
+      return snap.data()?['presenca'] as int?;
     });
   }
 

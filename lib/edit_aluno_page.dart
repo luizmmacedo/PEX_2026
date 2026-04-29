@@ -67,31 +67,33 @@ class _EditAlunoPageState extends State<EditAlunoPage> {
   Future<String?> _validarOrdem(int ordemIda, int ordemVolta) async {
     final periodo = _periodoSelecionado;
 
-    final snapIda = await FirebaseFirestore.instance
-        .collection('alunos')
-        .where('id_transportador', isEqualTo: _uid)
-        .where('periodo', isEqualTo: periodo)
-        .where('ordem_ida', isEqualTo: ordemIda)
-        .get();
-
-    for (final doc in snapIda.docs) {
-      if (doc.id != widget.aluno.id) {
-        final nome = doc.data()['nome_aluno'] ?? 'outro aluno';
-        return 'Ordem de ida $ordemIda já usada por "$nome" no período $periodo.';
+    if (ordemIda > 0) {
+      final snapIda = await FirebaseFirestore.instance
+          .collection('alunos')
+          .where('id_transportador', isEqualTo: _uid)
+          .where('periodo', isEqualTo: periodo)
+          .where('ordem_ida', isEqualTo: ordemIda)
+          .get();
+      for (final doc in snapIda.docs) {
+        if (doc.id != widget.aluno.id) {
+          final nome = doc.data()['nome_aluno'] ?? 'outro aluno';
+          return 'Ordem de ida $ordemIda já usada por "$nome" no período $periodo.';
+        }
       }
     }
 
-    final snapVolta = await FirebaseFirestore.instance
-        .collection('alunos')
-        .where('id_transportador', isEqualTo: _uid)
-        .where('periodo', isEqualTo: periodo)
-        .where('ordem_volta', isEqualTo: ordemVolta)
-        .get();
-
-    for (final doc in snapVolta.docs) {
-      if (doc.id != widget.aluno.id) {
-        final nome = doc.data()['nome_aluno'] ?? 'outro aluno';
-        return 'Ordem de volta $ordemVolta já usada por "$nome" no período $periodo.';
+    if (ordemVolta > 0) {
+      final snapVolta = await FirebaseFirestore.instance
+          .collection('alunos')
+          .where('id_transportador', isEqualTo: _uid)
+          .where('periodo', isEqualTo: periodo)
+          .where('ordem_volta', isEqualTo: ordemVolta)
+          .get();
+      for (final doc in snapVolta.docs) {
+        if (doc.id != widget.aluno.id) {
+          final nome = doc.data()['nome_aluno'] ?? 'outro aluno';
+          return 'Ordem de volta $ordemVolta já usada por "$nome" no período $periodo.';
+        }
       }
     }
 
