@@ -99,11 +99,12 @@ class _AuthCheckState extends State<AuthCheck> {
 
       if (!mounted) return;
 
+      final navigator = Navigator.of(context);
       if (query.docs.isEmpty) {
         await prefs.remove('transportador_uid');
-        Navigator.of(context).pushReplacementNamed('/login');
+        navigator.pushReplacementNamed('/login');
       } else {
-        Navigator.of(context).pushReplacementNamed(
+        navigator.pushReplacementNamed(
           '/dashboard',
           arguments: query.docs.first.data(),
         );

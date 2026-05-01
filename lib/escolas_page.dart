@@ -111,7 +111,7 @@ class _EscolasPageState extends State<EscolasPage> {
                   hintText: 'Nome da escola...',
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.15),
+                  fillColor: Colors.white.withValues(alpha: 0.15),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 12),
                   border: OutlineInputBorder(
@@ -196,7 +196,7 @@ class _EscolasPageState extends State<EscolasPage> {
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: primary.withOpacity(0.08),
+                          color: primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.school,

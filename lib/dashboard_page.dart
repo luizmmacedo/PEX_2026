@@ -21,11 +21,9 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isIndoParaEscola = true;
   String? _escolaFiltro;
 
-  Stream<List<String>>? _streamNomesEscolas;
   Stream<int>? _streamTotalAlunos;
 
   static const primary = Color(0xFF003366);
-  static const accent = Color(0xFF0057B8);
   static const surface = Color(0xFFEEF2F8);
 
   static const _avatarColors = [
@@ -47,7 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
       _waIconUrl,
       width: size,
       height: size,
-      errorBuilder: (_, __, ___) =>
+      errorBuilder: (context, error, stackTrace) =>
           Icon(Icons.message, color: const Color(0xFF25D366), size: size),
     );
   }
@@ -61,9 +59,6 @@ class _DashboardPageState extends State<DashboardPage> {
         transportador = args;
         _transportadorCarregado = true;
         final uid = transportador['uid'] ?? '';
-        _streamNomesEscolas = _service
-            .streamEscolas(uid)
-            .map((lista) => lista.map((e) => e['nome'] as String).toList());
         _streamTotalAlunos = _service.streamTotalAlunos(uid);
       }
     }
@@ -96,7 +91,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Container(
           width: 32, height: 32,
           decoration: BoxDecoration(
-            color: primary.withOpacity(0.07),
+            color: primary.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: primary, size: 17),
@@ -255,14 +250,14 @@ class _DashboardPageState extends State<DashboardPage> {
             width: 84, height: 84,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [_avatarColor(nome), _avatarColor(nome).withOpacity(0.7)],
+                colors: [_avatarColor(nome), _avatarColor(nome).withValues(alpha: 0.7)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                    color: _avatarColor(nome).withOpacity(0.4),
+                    color: _avatarColor(nome).withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8))
               ],
@@ -286,7 +281,7 @@ class _DashboardPageState extends State<DashboardPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: primary.withOpacity(0.07),
+                color: primary.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(veiculo,
@@ -394,7 +389,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         gradient: LinearGradient(
                           colors: [
                             _avatarColor(aluno.nome),
-                            _avatarColor(aluno.nome).withOpacity(0.75)
+                            _avatarColor(aluno.nome).withValues(alpha: 0.75)
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -402,7 +397,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: _avatarColor(aluno.nome).withOpacity(0.35),
+                            color: _avatarColor(aluno.nome).withValues(alpha: 0.35),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           )
@@ -457,6 +452,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     GestureDetector(
                       onTap: () async {
                         Navigator.of(ctx).pop();
+                        final messenger = ScaffoldMessenger.of(context);
                         final editado = await Navigator.of(context).push<bool>(
                           MaterialPageRoute(
                             builder: (_) => EditAlunoPage(
@@ -466,7 +462,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         );
                         if (editado == true && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(
                               content: Text('Dados atualizados!'),
                               backgroundColor: Colors.green,
@@ -477,7 +473,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: Container(
                         width: 40, height: 40,
                         decoration: BoxDecoration(
-                          color: primary.withOpacity(0.07),
+                          color: primary.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.edit_outlined,
@@ -598,10 +594,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: const Color(0xFF2E7D32),
                         bgColor: const Color(0xFFE8F5E9),
                         onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
                           await _service.marcarPresenca(aluno.id, 1, trajeto);
-                          if (!mounted) return;
+                          if (!ctx.mounted) return;
                           Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          messenger.showSnackBar(SnackBar(
                             content: Text(
                                 "✅ ${aluno.nome} — ${trajeto == 'ida' ? 'Ida' : 'Volta'} confirmada"),
                             backgroundColor: Colors.green.shade700,
@@ -617,10 +614,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: const Color(0xFFC62828),
                         bgColor: const Color(0xFFFFEBEE),
                         onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
                           await _service.marcarPresenca(aluno.id, 2, trajeto);
-                          if (!mounted) return;
+                          if (!ctx.mounted) return;
                           Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          messenger.showSnackBar(SnackBar(
                             content: Text(
                                 "❌ ${aluno.nome} — ${trajeto == 'ida' ? 'Ida' : 'Volta'} ausente"),
                             backgroundColor: Colors.red.shade700,
@@ -645,7 +643,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Container(
           width: 30, height: 30,
           decoration: BoxDecoration(
-            color: primary.withOpacity(0.07),
+            color: primary.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: primary, size: 15),
@@ -722,7 +720,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     color: _avatarColor(nome),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                        color: Colors.white.withOpacity(0.3),
+                                        color: Colors.white.withValues(alpha: 0.3),
                                         width: 2),
                                   ),
                                   child: Center(
@@ -771,7 +769,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 child: Container(
                                   width: 40, height: 40,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(Icons.person_add_rounded,
@@ -845,12 +843,12 @@ class _DashboardPageState extends State<DashboardPage> {
                             decoration: BoxDecoration(
                               color: ativo
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.14),
+                                  : Colors.white.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(24),
                               border: ativo
                                   ? null
                                   : Border.all(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       width: 1),
                             ),
                             child: Row(
@@ -902,10 +900,10 @@ class _DashboardPageState extends State<DashboardPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 9),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.14),
+                                color: Colors.white.withValues(alpha: 0.14),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                    color: Colors.white.withOpacity(0.2)),
+                                    color: Colors.white.withValues(alpha: 0.2)),
                               ),
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -1013,7 +1011,7 @@ class _AppBarChip extends StatelessWidget {
         curve: Curves.easeInOut,
         builder: (context, t, _) {
           final bg = Color.lerp(
-            Colors.white.withOpacity(0.12),
+            Colors.white.withValues(alpha: 0.12),
             Colors.white,
             t,
           )!;
@@ -1048,7 +1046,7 @@ class _DirecaoToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1091,38 +1089,6 @@ class _DirecaoToggle extends StatelessWidget {
   }
 }
 
-class _EscolaChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _EscolaChip(
-      {required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: selected ? const Color(0xFF003366) : Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _BannerTurno extends StatelessWidget {
   final String nome;
   final int totalTurno;
@@ -1147,13 +1113,13 @@ class _BannerTurno extends StatelessWidget {
           colors: [Color(0xFFE8F0FE), Color(0xFFEEF4FF)],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF003366).withOpacity(0.1)),
+        border: Border.all(color: const Color(0xFF003366).withValues(alpha: 0.1)),
       ),
       child: Row(children: [
         Container(
           width: 36, height: 36,
           decoration: BoxDecoration(
-            color: const Color(0xFF003366).withOpacity(0.1),
+            color: const Color(0xFF003366).withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.directions_bus_rounded,
@@ -1167,7 +1133,7 @@ class _BannerTurno extends StatelessWidget {
                   color: Color(0xFF0D1B2A), fontSize: 13),
               children: [
                 TextSpan(
-                    text: '$nome',
+                    text: nome,
                     style: const TextStyle(fontWeight: FontWeight.w700)),
                 TextSpan(
                     text:
@@ -1221,7 +1187,7 @@ class _AlunoCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 3),
             ),
@@ -1233,7 +1199,7 @@ class _AlunoCard extends StatelessWidget {
             Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
-                color: const Color(0xFF003366).withOpacity(0.08),
+                color: const Color(0xFF003366).withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -1249,7 +1215,7 @@ class _AlunoCard extends StatelessWidget {
               width: 48, height: 48,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [avatarColor, avatarColor.withOpacity(0.75)],
+                  colors: [avatarColor, avatarColor.withValues(alpha: 0.75)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1327,7 +1293,7 @@ class _AlunoCard extends StatelessWidget {
               child: Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF25D366).withOpacity(0.1),
+                  color: const Color(0xFF25D366).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(child: whatsAppIcon(size: 20)),
@@ -1357,7 +1323,7 @@ class _EmptyState extends StatelessWidget {
           Container(
             width: 72, height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFF003366).withOpacity(0.07),
+              color: const Color(0xFF003366).withValues(alpha: 0.07),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.child_care_rounded,
@@ -1414,9 +1380,9 @@ class _PerfilActionTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Row(children: [
           Icon(icon, color: color, size: 20),
@@ -1428,7 +1394,7 @@ class _PerfilActionTile extends StatelessWidget {
                   fontSize: 14)),
           const Spacer(),
           Icon(isDestructive ? Icons.logout : Icons.arrow_forward_ios_rounded,
-              color: color.withOpacity(0.5), size: 15),
+              color: color.withValues(alpha: 0.5), size: 15),
         ]),
       ),
     );
@@ -1459,7 +1425,7 @@ class _PresencaButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1503,10 +1469,10 @@ class _SeletorEscolaTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color: selected ? primary.withOpacity(0.07) : Colors.transparent,
+          color: selected ? primary.withValues(alpha: 0.07) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? primary.withOpacity(0.2) : Colors.transparent,
+            color: selected ? primary.withValues(alpha: 0.2) : Colors.transparent,
           ),
         ),
         child: Row(children: [
@@ -1514,7 +1480,7 @@ class _SeletorEscolaTile extends StatelessWidget {
             width: 36, height: 36,
             decoration: BoxDecoration(
               color: selected
-                  ? primary.withOpacity(0.12)
+                  ? primary.withValues(alpha: 0.12)
                   : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
             ),
@@ -1540,7 +1506,7 @@ class _SeletorEscolaTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
               decoration: BoxDecoration(
                 color: selected
-                    ? primary.withOpacity(0.1)
+                    ? primary.withValues(alpha: 0.1)
                     : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(20),
               ),

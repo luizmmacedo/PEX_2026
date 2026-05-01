@@ -25,7 +25,6 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
   String? _error;
 
   static const primary = Color(0xFF003366);
-  static const accent = Color(0xFF0057B8);
   final DatabaseService _service = DatabaseService();
 
   String get _uid => widget.transportador['uid'] ?? '';
@@ -241,8 +240,9 @@ class _AddAlunoPageState extends State<AddAlunoPage> {
                                 child: Text('Vespertino')),
                           ],
                           onChanged: (val) {
-                            if (val != null)
+                            if (val != null) {
                               setState(() => _periodoSelecionado = val);
+                            }
                           },
                           isLast: true,
                         ),
@@ -417,7 +417,7 @@ class _Secao extends StatelessWidget {
         Container(
           width: 28, height: 28,
           decoration: BoxDecoration(
-            color: const Color(0xFF003366).withOpacity(0.08),
+            color: const Color(0xFF003366).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: const Color(0xFF003366), size: 15),
@@ -448,7 +448,7 @@ class _Cartao extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -485,7 +485,7 @@ class _DropdownField<T> extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: DropdownButtonFormField<T>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           labelStyle:
@@ -539,13 +539,13 @@ class _OrdemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(children: [
         Container(
           width: 36, height: 36,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: color.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 18),
@@ -572,11 +572,11 @@ class _OrdemCard extends StatelessWidget {
                 const EdgeInsets.symmetric(vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: color.withOpacity(0.3)),
+              borderSide: BorderSide(color: color.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: color.withOpacity(0.3)),
+              borderSide: BorderSide(color: color.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

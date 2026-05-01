@@ -176,7 +176,7 @@ class _EditAlunoPageState extends State<EditAlunoPage> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: DropdownButtonFormField<String>(
-                      value: escolas.any(
+                      initialValue: escolas.any(
                               (e) => e['nome'] == _escolaSelecionada)
                           ? _escolaSelecionada
                           : null,
@@ -215,7 +215,7 @@ class _EditAlunoPageState extends State<EditAlunoPage> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: DropdownButtonFormField<String>(
-                      value: _periodoSelecionado,
+                      initialValue: _periodoSelecionado,
                       decoration: InputDecoration(
                         labelText: 'Período',
                         prefixIcon:
@@ -236,8 +236,9 @@ class _EditAlunoPageState extends State<EditAlunoPage> {
                             child: Text('Vespertino')),
                       ],
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setState(() => _periodoSelecionado = val);
+                        }
                       },
                     ),
                   ),
@@ -265,7 +266,7 @@ class _EditAlunoPageState extends State<EditAlunoPage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'A ordem deve ser única por turno (${_periodoSelecionado}).',
+                          'A ordem deve ser única por turno ($_periodoSelecionado).',
                           style: TextStyle(
                               color: Colors.blue.shade700, fontSize: 12),
                         ),
